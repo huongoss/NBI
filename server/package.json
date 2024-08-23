@@ -1,0 +1,16 @@
+{
+    "scripts": {
+      "start": "tsc && node dist/app.js",
+      "dev": "nodemon src/app.ts"
+    },
+    "dependencies": {
+        "mongoose":"8.5.3",
+        "csv-parser": "3.0.0",
+        "@types/mongoose":"5.11.97",
+        "@types/node":"22.5.0",
+        "axios":"1.7.4"
+    },
+    "devDependencies": {
+        "typescript": "5.5.4"
+    }
+}
