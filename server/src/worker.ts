@@ -10,15 +10,18 @@ interface DynamicDocument extends Document {
 // Function to create a Mongoose schema from a CSV file URL and save data to MongoDB
 async function createSchemaAndSaveDataFromURL(url: string): Promise<void> {
     const headers: { [key: string]: any } = {};
-    const dataRows: string[] = [];
 
     try {
         // Fetch CSV data from the public URL
-        // Test Auth
-        const test = await axios.get("https://www.fhwa.dot.gov/bridge/nbi/disclaim.cfm?nbiYear=2022/delimited&nbiState=PA22");
-        console.log(test.data);
         const response = await axios.get(url, { responseType: 'stream' });
 
+        // Create Mongoose schema using the extracted headers
+        let dynamicSchema: mongoose.Schema;
+
+        // Create Mongoose model
+        let DynamicModel: mongoose.Model<DynamicDocument>;
+
+        let counter = 0;
         // Use the response stream to parse CSV
         return new Promise((resolve, reject) => {
             response.data
@@ -27,27 +30,21 @@ async function createSchemaAndSaveDataFromURL(url: string): Promise<void> {
                     headerList.forEach(header => {
                         headers[header] = { type: String }; // Defaulting to String type for simplicity
                     });
+                    dynamicSchema = new mongoose.Schema(headers);
+                    DynamicModel = mongoose.model<DynamicDocument>('DynamicModel', dynamicSchema, 'nbi')
                 })
-                .on('data', (row: string) => {
-                    console.log(row);
-                    dataRows.push(row);
-                })
-                .on('end', async () => {
+                .on('data',  async (row: any) => {
                     try {
-                        // Create Mongoose schema using the extracted headers
-                        const dynamicSchema = new mongoose.Schema(headers);
-
-                        // Create Mongoose model
-                        const DynamicModel = mongoose.model<DynamicDocument>('DynamicModel', dynamicSchema);
-
                         // Save all rows to the database
-                        await DynamicModel.insertMany(dataRows);
-                        console.log('All data saved to MongoDB');
-
-                        resolve();
+                        console.log(counter++);
+                        await DynamicModel.insertMany(row);
                     } catch (error) {
                         reject(error);
                     }
+                })
+                .on('end', async () => {
+                        resolve();
+                        console.log('CSV file successfully processed');
                 })
                 .on('error', (error: any) => reject(error));
         });
@@ -56,9 +53,11 @@ async function createSchemaAndSaveDataFromURL(url: string): Promise<void> {
     }
 }
 
-// Example usage
+// Create database from csv url.
 export default async function readCSV(url: string) {
     try {
+        // Connect to MongoDB.
+        await mongoose.connect('mongodb://localhost:27017/nbi');
         await createSchemaAndSaveDataFromURL(url);
     } catch (error) {
         console.error('Error:', error);

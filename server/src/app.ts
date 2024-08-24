@@ -1,11 +1,25 @@
+import express from "express";
+import readCSV from "./worker";
+import * as Api from "./api";
 import mongoose from "mongoose";
-import readCSV from "./prepare";
-// Connect to MongoDB and run the script
-mongoose.connect('mongodb://localhost:27017/your-database', {})
-    .then(() => {
-        console.log('Connected to MongoDB');
+const cors = require('cors');
 
-        readCSV("https://www.fhwa.dot.gov/bridge/nbi/2022/delimited/PA22.txt");
-        //readCSV("https://google.com");
-    })
-    .catch((err: any) => console.error('Could not connect to MongoDB', err));
+// Connect to MongoDB and create database.
+//readCSV("https://www.fhwa.dot.gov/bridge/nbi/2024/delimited/PA24.txt");
+
+// Create an Express.js app
+const app = express();
+
+// Connect to MongoDB.
+mongoose.connect('mongodb://localhost:27017/nbi');
+
+// Enable CORS Requests for dev purposes.
+app.use(cors());
+// Define a route to return the list of bridge locations
+app.get("/nbi/location", Api.locationHandler);
+
+// Start the server
+const port = 3001; // Choose a port number
+app.listen(port, () => {
+    console.log(`Server is running on port ${port}`);
+});
