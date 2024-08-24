@@ -1,11 +1,8 @@
 import express from "express";
-import readCSV from "./worker";
 import * as Api from "./api";
 import mongoose from "mongoose";
 const cors = require('cors');
 
-// Connect to MongoDB and create database.
-//readCSV("https://www.fhwa.dot.gov/bridge/nbi/2024/delimited/PA24.txt");
 
 // Create an Express.js app
 const app = express();
